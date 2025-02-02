@@ -13,6 +13,8 @@
 # testing
 /coverage
 
+/wrangler.json
+
 # next.js
 /.next/
 /out/
@@ -41,5 +43,8 @@ yarn-error.log*
 next-env.d.ts
 
 # wrangler files
-.wrangler
+.wrangler*
+/wrangler
 .dev.vars
+wrangler.json
+
