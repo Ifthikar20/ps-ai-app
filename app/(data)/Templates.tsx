@@ -6,6 +6,7 @@ const templates = [
         icon: "https://cdn-icons-png.flaticon.com/128/686/686589.png",
         aiPrompt: "Generate creative blog titles based on the provided niche and outline.",
         slug: "blog-title-generator",
+        gameCharacter: ["Creative Genius", "Title Master", "Wordsmith"],
         form: [
             {
                 label: "Enter your niche",
@@ -27,6 +28,7 @@ const templates = [
         icon: "https://cdn-icons-png.flaticon.com/128/3039/3039363.png",
         aiPrompt: "Generate a list of words for a hangman game based on difficulty level.",
         slug: "hangman-game",
+        gameCharacter: ["Word Explorer", "Risk Taker", "Puzzle Master"],
         form: [
             {
                 label: "Select difficulty level",
@@ -44,6 +46,7 @@ const templates = [
         icon: "https://cdn-icons-png.flaticon.com/128/1384/1384060.png",
         aiPrompt: "Suggest video edits and enhancements based on the provided video details.",
         slug: "youtube-video-editor",
+        gameCharacter: ["Cinematic Eye", "Editing Guru", "Cutting Edge"],
         form: [
             {
                 label: "Upload your video",
@@ -65,6 +68,7 @@ const templates = [
         icon: "https://cdn-icons-png.flaticon.com/128/2664/2664073.png",
         aiPrompt: "Analyze the chess board position and suggest the best move.",
         slug: "chess-move-predictor",
+        gameCharacter: ["Strategic Thinker", "Grandmaster Mind", "Tactical Genius"],
         form: [
             {
                 label: "Upload chess board position",
@@ -81,6 +85,7 @@ const templates = [
         icon: "https://cdn-icons-png.flaticon.com/128/3176/3176363.png",
         aiPrompt: "Generate a set of trivia questions and answers based on the chosen topic.",
         slug: "trivia-quiz-generator",
+        gameCharacter: ["Mind Breaker", "Take Your Time", "Quick Thinker"],
         form: [
             {
                 label: "Enter topic",
@@ -104,6 +109,7 @@ const templates = [
         icon: "https://cdn-icons-png.flaticon.com/128/3050/3050525.png",
         aiPrompt: "Solve the given Sudoku puzzle and provide the solution.",
         slug: "sudoku-solver",
+        gameCharacter: ["Logic Master", "Number Whisperer", "Pattern Seeker"],
         form: [
             {
                 label: "Upload Sudoku puzzle image",

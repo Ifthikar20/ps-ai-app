@@ -10,6 +10,7 @@ export interface TEMPLATE {
   slug: string;
   aiPrompt: string;
   form?: FORM[];
+  gameCharacter?: string[]; // Added gameCharacter property
 }
 
 export interface FORM {
