@@ -9,75 +9,95 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { chatSession } from "@/utils/AImodel";
-// import { Logging } from "@google-cloud/logging"; // ❌ Removed Node.js module
-
-export const runtime = "edge";
+import { useUser } from "@clerk/nextjs";
 
 interface PROPS {
-    params: Promise<{ "template-slug": string }>;
+    params: Promise<{ "template-slug": string }>; // ✅ `params` is a Promise
 }
-
-// ❌ Removed Google Cloud Logging as it is not supported in client components
-// const logging = new Logging();
-// const log = logging.log("gemini-api-requests");
-
-// const logRequest = async (prompt: string, response: string | null, error: string | null) => {
-//     const metadata = { resource: { type: "global" } };
-//     const entry = log.entry(metadata, {
-//         timestamp: new Date().toISOString(),
-//         request: { prompt },
-//         response: response ? { text: response } : null,
-//         error: error ? { message: error } : null,
-//     });
-
-//     await log.write(entry);
-// };
 
 function CreateContent({ params }: PROPS) {
     const [resolvedParams, setResolvedParams] = useState<{ "template-slug": string } | null>(null);
     const [selectedTemplate, setSelectedTemplate] = useState<TEMPLATE | undefined>(undefined);
     const [loading, setLoading] = useState<boolean>(false);
+    const [aiOutput, setAiOutput] = useState<string>('');
+    const { user } = useUser();
 
-    // ✅ Resolve params since it's a Promise
+    // ✅ Unwrap `params` using `React.use()`
+    const unwrappedParams = React.use(params);
+
     useEffect(() => {
-        params.then((p) => {
-            setResolvedParams(p);
-            const foundTemplate = templates.find((item) => item.slug === p["template-slug"]);
+        if (unwrappedParams && unwrappedParams["template-slug"]) {
+            const foundTemplate = templates.find((item) => item.slug === unwrappedParams["template-slug"]);
+            setResolvedParams(unwrappedParams);
             setSelectedTemplate(foundTemplate);
-        }).catch((err) => {
-            console.error("Error resolving params:", err);
-        });
-    }, [params]);
+        }
+    }, [unwrappedParams]);
 
     const GenerateAIGame = async (formData: Record<string, string>) => {
         setLoading(true);
 
         try {
-            const selectedPrompt = selectedTemplate?.aiPrompt;
+            if (!selectedTemplate) {
+                console.error("❌ Error: No template selected.");
+                return;
+            }
+
+            const selectedPrompt = selectedTemplate.aiPrompt;
             const finalAIPrompt = JSON.stringify(formData) + ", " + selectedPrompt;
 
             console.log("📝 Sending request to Gemini API:", finalAIPrompt);
             const result = await chatSession.sendMessage(finalAIPrompt);
             const responseText = await result.response.text();
 
+            setAiOutput(responseText);
+
+            if (selectedTemplate.slug) {
+                await saveInDB(formData, selectedTemplate.slug, responseText);
+            } else {
+                console.error("❌ Error: Template slug is missing.");
+            }
+
             console.log("✅ Response from Gemini API:", responseText);
-
-            // ❌ Removed logging call
-            // await logRequest(finalAIPrompt, responseText, null);
-
-            setLoading(false);
         } catch (error) {
             console.error("❌ Error calling Gemini API:", error);
-        
-            // 🔹 Convert error to a string safely
-            const errorMessage = error instanceof Error ? error.message : String(error);
-        
-            // ✅ Use errorMessage in the console
-            console.error("❌ AI API Error Message:", errorMessage);
-        
+        } finally {
             setLoading(false);
         }
-        
+    };
+
+    const saveInDB = async (formData: any, slug: string, aiResp: string | null) => {
+        try {
+            const formattedDate = new Date().toISOString();
+            const createdBy = user?.primaryEmailAddress?.emailAddress ?? "unknown";
+
+            console.log("📤 Sending API Request to /api/insert with:", {
+                formData: JSON.stringify(formData),
+                templateSlug: slug,
+                aiResponse: aiResp,
+                createdBy,
+                createdAt: formattedDate,
+            });
+
+            const response = await fetch("/api/insert", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    formData: JSON.stringify(formData),
+                    templateSlug: slug,
+                    aiResponse: aiResp,
+                    createdBy,
+                    createdAt: formattedDate,
+                }),
+            });
+
+            const data = await response.json();
+            console.log("✅ API Response:", data);
+
+            if (!response.ok) throw new Error(`❌ API Error: ${data || "Unknown error"}`);
+
+        } catch (error) {
+            console.error("❌ Error inserting data:", error);
+        }
     };
 
     if (!resolvedParams) {
@@ -96,13 +116,13 @@ function CreateContent({ params }: PROPS) {
                 </Button>
             </Link>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10 p-5">
-                <FormSection 
-                    selectedTemplate={selectedTemplate} 
-                    userFormInput={GenerateAIGame} // ✅ Fix: Passing function directly
-                    loading={loading} 
+                <FormSection
+                    selectedTemplate={selectedTemplate}
+                    userFormInput={GenerateAIGame}
+                    loading={loading}
                 />
                 <div className="col-span-2">
-                    <OutputSection />
+                    <OutputSection aiOutput={aiOutput} />
                 </div>
             </div>
         </div>
