@@ -11,6 +11,8 @@ import Link from "next/link";
 import { chatSession } from "@/utils/AImodel";
 import { useUser } from "@clerk/nextjs";
 
+export const runtime = 'edge';
+
 interface PROPS {
     params: Promise<{ "template-slug": string }>; // ✅ `params` is a Promise
 }
@@ -65,11 +67,11 @@ function CreateContent({ params }: PROPS) {
         }
     };
 
-    const saveInDB = async (formData: any, slug: string, aiResp: string | null) => {
+    const saveInDB = async (formData: Record<string, string>, slug: string, aiResp: string | null) => {
         try {
             const formattedDate = new Date().toISOString();
             const createdBy = user?.primaryEmailAddress?.emailAddress ?? "unknown";
-
+    
             console.log("📤 Sending API Request to /api/insert with:", {
                 formData: JSON.stringify(formData),
                 templateSlug: slug,
@@ -77,7 +79,7 @@ function CreateContent({ params }: PROPS) {
                 createdBy,
                 createdAt: formattedDate,
             });
-
+    
             const response = await fetch("/api/insert", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -89,16 +91,17 @@ function CreateContent({ params }: PROPS) {
                     createdAt: formattedDate,
                 }),
             });
-
+    
             const data = await response.json();
             console.log("✅ API Response:", data);
-
+    
             if (!response.ok) throw new Error(`❌ API Error: ${data || "Unknown error"}`);
-
+    
         } catch (error) {
             console.error("❌ Error inserting data:", error);
         }
     };
+    
 
     if (!resolvedParams) {
         return <div className="p-5 text-gray-500">Loading...</div>;

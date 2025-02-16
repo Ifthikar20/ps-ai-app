@@ -1,6 +1,9 @@
+"use client"
 import React from 'react'
+import {Button} from "@/components/ui/button"
 
 function UsageTrack() {
+
   return (
     <div className='m-5'>
 
@@ -17,7 +20,9 @@ function UsageTrack() {
                 350/10,000 credit used
             </h2>
         </div>
-       
+       <Button variant={'secondary'} className="w-full my-3">
+        Get premium
+       </Button>
     </div>
   )
 }
