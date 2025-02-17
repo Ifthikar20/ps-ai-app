@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import Image from "next/image";
-import { FileClock, Home, Settings, WalletCards } from "lucide-react";
+import { FileClock, Home, Settings, WalletCards, Gamepad } from "lucide-react";
 import { usePathname } from "next/navigation";
 import UsageTrack from "./UsageTrack";
 
@@ -39,10 +38,16 @@ function SideNav() {
   return (
     <div className="h-screen relative p-5 shadow-sm border bg-black text-white">
       {/* Logo Section */}
-      <div className="flex justify-center">
-        <Image src={"/image.svg"} alt="logo" width={100} height={100} />
-      </div>
-
+      <nav className="border-b border-gray-800 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Gamepad className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500" />
+              <span className="ml-2 text-lg sm:text-xl font-bold">PlayStudy.AI</span>
+            </div>
+          </div>
+        </div>
+      </nav>
       <hr className="my-6 border-gray-600" />
 
       {/* Navigation Links */}

@@ -11,7 +11,7 @@ interface InsertAIOutputRequest {
   createdAt?: string;
 }
 
-// ✅ Cloudflare Pages requires `process.env.DB`
+
 const dbUrl = process.env.DB;
 
 if (!dbUrl) {

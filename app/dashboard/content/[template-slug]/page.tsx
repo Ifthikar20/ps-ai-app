@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { chatSession } from "@/utils/AImodel";
-import { useUser } from "@clerk/nextjs";
+// import { useUser } from "@clerk/nextjs";
 
 export const runtime = 'edge';
 
@@ -22,7 +22,7 @@ function CreateContent({ params }: PROPS) {
     const [selectedTemplate, setSelectedTemplate] = useState<TEMPLATE | undefined>(undefined);
     const [loading, setLoading] = useState<boolean>(false);
     const [aiOutput, setAiOutput] = useState<string>('');
-    const { user } = useUser();
+    // const { user } = useUser();
 
     // ✅ Unwrap `params` using `React.use()`
     const unwrappedParams = React.use(params);
@@ -70,8 +70,9 @@ function CreateContent({ params }: PROPS) {
     const saveInDB = async (formData: Record<string, string>, slug: string, aiResp: string | null) => {
         try {
             const formattedDate = new Date().toISOString();
-            const createdBy = user?.primaryEmailAddress?.emailAddress ?? "unknown";
-    
+            // const createdBy = user?.primaryEmailAddress?.emailAddress ?? "unknown";
+            const createdBy = "dummyemail@example.com"; // Replace Clerk's user email with a dummy email
+
             console.log("📤 Sending API Request to /api/insert with:", {
                 formData: JSON.stringify(formData),
                 templateSlug: slug,
