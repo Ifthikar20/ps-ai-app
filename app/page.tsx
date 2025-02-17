@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Gamepad, Book, Brain, ArrowRight, Menu, X, Sparkles, Zap } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 type HoveredCard = 'active' | 'game' | 'note' | null;
 
@@ -24,7 +25,7 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-gray-900 text-white relative">
       {/* Cursor Glow Effect */}
-      <div 
+      <div
         className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300"
         style={{
           background: `
@@ -45,9 +46,12 @@ export default function Page() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-4">
-              <button className="px-4 py-2 rounded-lg text-gray-300 hover:text-white transition-colors">
+              <Link
+                href="/signin"
+                className="px-4 py-2 rounded-lg text-gray-300 hover:text-white transition-colors"
+              >
                 Sign In
-              </button>
+              </Link>
               <button className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors">
                 Try Free
               </button>
@@ -70,9 +74,12 @@ export default function Page() {
         {isMobileMenuOpen && (
           <div className="md:hidden absolute top-16 inset-x-0 bg-gray-900 border-b border-gray-800 z-50">
             <div className="px-4 py-4 space-y-3">
-              <button className="w-full px-4 py-2 rounded-lg text-gray-300 hover:text-white transition-colors text-left">
+              <Link
+                href="/signin"
+                className="block w-full px-4 py-2 rounded-lg text-gray-300 hover:text-white transition-colors text-left"
+              >
                 Sign In
-              </button>
+              </Link>
               <button className="w-full px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors text-left">
                 Try Free
               </button>
