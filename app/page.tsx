@@ -115,7 +115,7 @@ export default function Page() {
             <div className="relative rounded-xl overflow-hidden border-2 border-purple-500/50 bg-gray-900">
               <div className="relative w-full aspect-video">
                 <Image
-                  src="/demo-animation.gif"
+                  src="/demo-animation2.gif"
                   alt="Interactive learning demo"
                   fill
                   className="object-cover"
