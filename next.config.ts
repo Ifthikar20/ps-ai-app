@@ -9,10 +9,9 @@ if (process.env.NODE_ENV === 'development') {
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  images:{
-    domains:['cdn-icons-png.flaticon.com']
-  }
+  images: {
+    domains: ['cdn-icons-png.flaticon.com', 'lh3.googleusercontent.com'],
+  },
 };
 
 export default nextConfig;
