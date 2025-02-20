@@ -16,52 +16,79 @@
 // export const { handlers, signIn, signOut } = auth;
 
 
-import NextAuth, { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import type { JWT } from "next-auth/jwt";
-import type { Session, User, Account, Profile } from "next-auth";
-import type { AdapterUser } from "next-auth/adapters"; // Needed for `user` in JWT callback
+// lib/auth.ts
+import { cookies } from "next/headers";
+import { jwtVerify, SignJWT } from "jose";
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    GoogleProvider({
-      clientId: process.env.AUTH_GOOGLE_ID!,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-    }),
-  ],
-  secret: process.env.NEXTAUTH_SECRET,
-  callbacks: {
-    async jwt({
-      token,
-      account,
-      profile,
-    }: {
-      token: JWT;
-      account?: Account | null;
-      profile?: Profile | undefined; // ✅ Use generic Profile instead of GoogleProfile
-      user?: User | AdapterUser;
-    }) {
-      if (account && profile) {
-        token.accessToken = account.access_token;
-        token.id = profile.sub || token.sub;
-        token.picture = profile.image || token.picture || ""; // ✅ Use `image` instead of `picture`
-      }
-      return token;
-    },
-    async session({ session, token }: { session: Session; token: JWT }) {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.id,
-          image: token.picture, // ✅ Now this works correctly
-        },
-      };
-    },
-  },
-  session: {
-    strategy: "jwt",
-  },
-};
+const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'your-secret-key');
 
-export const auth = NextAuth(authOptions);
+export interface UserSession {
+  id: string;
+  email: string;
+  name: string | null;
+  image: string | null;
+}
+
+// Type guard to verify the payload has the required UserSession properties
+function isUserSession(payload: unknown): payload is UserSession {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'id' in payload &&
+    'email' in payload &&
+    'name' in payload &&
+    'image' in payload &&
+    typeof payload.id === 'string' &&
+    typeof payload.email === 'string' &&
+    (payload.name === null || typeof payload.name === 'string') &&
+    (payload.image === null || typeof payload.image === 'string')
+  );
+}
+
+export async function getUserSession(): Promise<UserSession | null> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth-token')?.value;
+    if (!token) return null;
+
+    const verified = await jwtVerify(token, JWT_SECRET);
+    const payload = verified.payload;
+
+    if (!isUserSession(payload)) {
+      console.error('Invalid session payload:', payload);
+      return null;
+    }
+
+    return payload;
+  } catch (error) {
+    console.error('Error verifying session:', error);
+    return null;
+  }
+}
+
+export async function createSession(user: UserSession) {
+  const token = await new SignJWT({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    image: user.image,
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('1d')
+    .sign(JWT_SECRET);
+
+  const cookieStore = await cookies();
+  cookieStore.set('auth-token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+  });
+
+  return token;
+}
+
+export async function signOut() {
+  const cookieStore = await cookies();
+  cookieStore.delete('auth-token');
+}

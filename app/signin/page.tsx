@@ -1,39 +1,20 @@
+// app/signin/page.tsx
 'use client'
 
 import { useState } from 'react';
 import { Gamepad } from 'lucide-react';
 import Link from 'next/link';
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleMouseMove = (e: React.MouseEvent) => {
     setMousePosition({ x: e.clientX, y: e.clientY + window.scrollY });
   };
 
   const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/dashboard' });
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const signInResponse = await signIn("credentials", {
-      email: data.get("email"),
-      password: data.get("password"),
-      redirect: false,
-    });
-
-    if (signInResponse && !signInResponse.error) {
-      router.push("/timeline");
-    } else {
-      console.log("Error: ", signInResponse);
-      setError("Your Email or Password is wrong!");
-    }
+    window.location.href = '/api/auth/google';
   };
 
   return (
@@ -76,6 +57,13 @@ export default function SignInPage() {
                 Welcome Back
               </h1>
 
+              {/* Error Message */}
+              {error && (
+                <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-center">
+                  {error}
+                </div>
+              )}
+
               {/* Google Sign In Button */}
               <button 
                 onClick={handleGoogleSignIn}
@@ -93,44 +81,6 @@ export default function SignInPage() {
                 </div>
                 <span className="font-semibold">Sign in with Google</span>
               </button>
-
-              <div className="relative flex items-center justify-center mb-8">
-                <div className="border-t border-gray-600 w-full"></div>
-                <span className="bg-gray-800 px-4 text-gray-400 text-sm">Or continue with email</span>
-                <div className="border-t border-gray-600 w-full"></div>
-              </div>
-
-              {/* Credentials Form */}
-              <form className="w-full text-black font-semibold flex flex-col" onSubmit={handleSubmit}>
-                {error && (
-                  <div className="p-4 mb-4 text-sm font-semibold text-white bg-red-500 rounded-lg">
-                    {error}
-                  </div>
-                )}
-                
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  required
-                  className="w-full px-4 py-3 mb-4 border border-gray-700 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
-                />
-
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Password"
-                  required
-                  className="w-full px-4 py-3 mb-4 border border-gray-700 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
-                />
-
-                <button
-                  type="submit"
-                  className="w-full py-3 px-6 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800"
-                >
-                  Sign in
-                </button>
-              </form>
 
               <p className="text-sm text-gray-400 text-center mt-6">
                 By signing in, you agree to our Terms of Service and Privacy Policy
