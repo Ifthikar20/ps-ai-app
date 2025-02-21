@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/lib/auth';
 
+export const runtime = "edge"; 
 // Session Types
 export interface SessionUser {
   id: string;

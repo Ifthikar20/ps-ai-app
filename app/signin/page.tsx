@@ -1,7 +1,6 @@
-// app/signin/page.tsx
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Gamepad } from 'lucide-react';
 import Link from 'next/link';
 
@@ -17,7 +16,19 @@ export default function SignInPage() {
     window.location.href = '/api/auth/google';
   };
 
+  // Check URL parameters for errors on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+    const messageParam = urlParams.get('message');
+    
+    if (errorParam) {
+      setError(messageParam || `Authentication failed: ${errorParam}`);
+    }
+  }, []);
+
   return (
+    // Rest of your JSX remains the same...
     <div 
       className="min-h-screen bg-gray-900 text-white relative"
       onMouseMove={handleMouseMove}

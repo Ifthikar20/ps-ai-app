@@ -1,71 +1,47 @@
-import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { NextResponse } from "next/server";
+import { createSession } from "@/lib/auth";
 
-// Define the expected structure of the user response
-interface UserData {
-  sub: string;
-  email: string;
-  name: string;
-  picture?: string;
-}
+export const runtime = "edge"; // ✅ Ensure Edge Runtime is explicitly set
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const code = searchParams.get("code");
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  const error = url.searchParams.get("error");
+
+  if (error) {
+    return NextResponse.redirect(new URL(`/signin?error=${error}`, request.url));
+  }
 
   if (!code) {
-    return NextResponse.json({ error: "Authorization code missing" }, { status: 400 });
+    return NextResponse.redirect(new URL("/signin?error=no_code", request.url));
   }
 
   try {
-    // Exchange code for access token
-    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID!,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-        redirect_uri: process.env.REDIRECT_URI!,
-        grant_type: "authorization_code",
-        code,
-      }),
+    // Fetch user info from Google
+    const userResponse = await fetch(`${request.url.split("/api")[0]}/api/auth/google-auth?action=get-user&code=${code}`);
+    if (!userResponse.ok) throw new Error("Failed to fetch user info");
+
+    const userData = (await userResponse.json()) as {
+      id: string;
+      email: string;
+      name: string;
+      picture?: string;
+    };
+
+    // Create session for the user
+    await createSession({
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      image: userData.picture ?? null,
     });
 
-    const tokenData: { access_token: string } = await tokenResponse.json(); // Type assertion
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  } catch (error: unknown) {
+    console.error("OAuth callback error:", error);
 
-    if (!tokenData.access_token) {
-      return NextResponse.json({ error: "Failed to obtain access token" }, { status: 400 });
-    }
-
-    // Fetch user info using access token
-    const userResponse = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
-    });
-
-    const userData: UserData = await userResponse.json(); // ✅ Type assertion
-
-    if (!userData.email) {
-      return NextResponse.json({ error: "Failed to retrieve user data" }, { status: 400 });
-    }
-
-    // Generate JWT token for session management
-    const token = jwt.sign(
-      { id: userData.sub, email: userData.email, name: userData.name, picture: userData.picture },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
+    return NextResponse.redirect(
+      new URL(`/signin?error=auth_error&message=${encodeURIComponent(error instanceof Error ? error.message : "Unknown error")}`, request.url)
     );
-
-    // Set session cookie
-    const response = NextResponse.redirect("/");
-    response.cookies.set(process.env.SESSION_COOKIE_NAME!, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60,
-    });
-
-    return response;
-  } catch (error) {
-    console.error("OAuth Callback Error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,36 +1,21 @@
-// app/api/auth/google/route.ts
-import { NextResponse } from 'next/server';
-import { OAuth2Client } from 'google-auth-library';
+import { NextResponse } from "next/server";
 
-const REDIRECT_URI = 'http://localhost:3000/api/auth/google/callback';
+export const runtime = "edge";
 
-console.log('Using credentials:', {
-  clientId: process.env.AUTH_GOOGLE_ID,
-  redirectUri: REDIRECT_URI
-});
-
-const client = new OAuth2Client(
-  process.env.AUTH_GOOGLE_ID,
-  process.env.AUTH_GOOGLE_SECRET,
-  REDIRECT_URI
-);
+// Define expected response type
+interface AuthResponse {
+  authUrl: string;
+}
 
 export async function GET(request: Request) {
-  try {
-    const authUrl = client.generateAuthUrl({
-      access_type: 'offline',
-      scope: [
-        'https://www.googleapis.com/auth/userinfo.profile',
-        'https://www.googleapis.com/auth/userinfo.email'
-      ],
-      include_granted_scopes: true,
-      prompt: 'consent'
-    });
+  const response = await fetch(`${request.url.split("/api")[0]}/api/auth/google-auth?action=generate-url`);
+  
+  // Type assertion for response JSON
+  const data = (await response.json()) as AuthResponse;
 
-    console.log('Generated auth URL:', authUrl);
-    return NextResponse.redirect(new URL(authUrl));
-  } catch (error) {
-    console.error('Error in Google OAuth route:', error);
-    return NextResponse.redirect(new URL('/signin?error=auth_error', request.url));
+  if (!data.authUrl) {
+    return NextResponse.json({ error: "Failed to generate auth URL" }, { status: 500 });
   }
+
+  return NextResponse.redirect(new URL(data.authUrl));
 }
